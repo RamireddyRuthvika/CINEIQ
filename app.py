@@ -34,7 +34,7 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 """, unsafe_allow_html=True)
 
 
-# ── HELPERS ────────────────────────────────────────────────────────────────
+#  HELPERS
 
 def api_get(path):
     try:
@@ -86,7 +86,7 @@ def render_movie_card(item, index=None, show_reason=True):
     </div>""", unsafe_allow_html=True)
 
 
-# ── SIDEBAR ────────────────────────────────────────────────────────────────
+# SIDEBAR 
 
 with st.sidebar:
     st.markdown('<div class="cineiq-logo">CINEIQ</div>', unsafe_allow_html=True)
@@ -104,9 +104,9 @@ with st.sidebar:
         st.markdown('<div style="font-size:0.75rem;color:#f44336;">● API Offline — run uvicorn main:app --reload</div>', unsafe_allow_html=True)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 # PAGE 1 — MOVIE SEARCH
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 if page == "🔍 Movie Search":
     st.markdown('<div class="page-title">Find Similar Movies</div>', unsafe_allow_html=True)
@@ -133,9 +133,8 @@ if page == "🔍 Movie Search":
                     render_movie_card(item, index=i, show_reason=True)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 # PAGE 2 — RECOMMENDATIONS
-# ══════════════════════════════════════════════════════════════════════════════
 
 elif page == "🎯 Recommendations":
     st.markdown('<div class="page-title">Your Recommendations</div>', unsafe_allow_html=True)
@@ -172,9 +171,9 @@ elif page == "🎯 Recommendations":
                 render_movie_card(item, index=i, show_reason=True)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 # PAGE 3 — TASTE DASHBOARD
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 elif page == "📊 Taste Dashboard":
     st.markdown('<div class="page-title">Your Taste Profile</div>', unsafe_allow_html=True)
