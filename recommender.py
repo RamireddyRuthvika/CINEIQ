@@ -1,8 +1,6 @@
-"""
-CINEIQ — recommender.py
-Run generate_pickles() ONCE from your notebook to build models/.
-Then FastAPI calls load_models() once at startup.
-"""
+
+# CINEIQ — recommender.py
+
 
 import ast
 import os
@@ -17,7 +15,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.pipeline import Pipeline
 
-# ── GLOBALS ────────────────────────────────────────────────────────────────
+#  GLOBALS 
 df               = None
 df_final         = None
 tfidf_matrix     = None
@@ -36,9 +34,9 @@ ratings_by_user  = None
 sentiment_scores = None
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# SECTION 1 — HELPERS
-# ══════════════════════════════════════════════════════════════════════════════
+
+#  HELPERS
+
 
 def fetch_names(text):
     names = []
@@ -104,9 +102,9 @@ def get_movie_genres(ml_id):
     return genres.split('|')
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# SECTION 2 — GENERATE PICKLES (run once from notebook)
-# ══════════════════════════════════════════════════════════════════════════════
+
+#  GENERATE PICKLES (run once from notebook)
+
 
 def generate_pickles(
     archive_path="archive",
@@ -116,7 +114,7 @@ def generate_pickles(
 ):
     os.makedirs(models_dir, exist_ok=True)
 
-    # ── Content ────────────────────────────────────────────────────────────
+    #  Content 
     print("Loading TMDB metadata...")
     movies_df = pd.read_csv(f"{archive_path}/movies_metadata.csv", low_memory=False)
     keywords  = pd.read_csv(f"{archive_path}/keywords.csv")
@@ -152,7 +150,7 @@ def generate_pickles(
     tfidf_t        = TfidfVectorizer(stop_words='english')
     tfidf_matrix_t = tfidf_t.fit_transform(df_final_t['tags'])
 
-    # ── Collaborative ──────────────────────────────────────────────────────
+    #  Collaborative 
     print("Loading MovieLens ratings (full 25M)...")
     ratings_t = pd.read_csv(f"{ml_path}/ratings.csv")
     movie_t   = pd.read_csv(f"{ml_path}/movies.csv")
@@ -182,7 +180,7 @@ def generate_pickles(
     svd_t            = TruncatedSVD(n_components=100, random_state=42)
     reduced_matrix_t = svd_t.fit_transform(sparse_t)
 
-    # ── Sentiment ──────────────────────────────────────────────────────────
+    #  Sentiment 
     print("Training sentiment classifier...")
     imdb = pd.read_csv(imdb_path)
     imdb['label'] = (imdb['sentiment'] == 'positive').astype(int)
@@ -202,7 +200,7 @@ def generate_pickles(
         if ml_id:
             sentiment_t[int(ml_id)] = round(float(score), 4)
 
-    # ── Save ───────────────────────────────────────────────────────────────
+    #  Save
     print("Saving pickles...")
     pickle.dump(df_t,            open(f"{models_dir}/df.pkl",              "wb"))
     pickle.dump(df_final_t,      open(f"{models_dir}/df_final.pkl",        "wb"))
@@ -222,9 +220,9 @@ def generate_pickles(
     print("Done. All pickles saved.")
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# SECTION 3 — LOAD MODELS (FastAPI startup)
-# ══════════════════════════════════════════════════════════════════════════════
+
+#  LOAD MODELS (FastAPI startup)
+
 
 def load_models(models_dir="models"):
     global df, df_final, tfidf_matrix, ratings, movie, links
@@ -253,9 +251,9 @@ def load_models(models_dir="models"):
     print("All models loaded. Ready.")
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# SECTION 4 — CONTENT-BASED
-# ══════════════════════════════════════════════════════════════════════════════
+
+# CONTENT-BASED
+
 
 def recommend(movie_name, top_n=5):
     mask = df_final['title'].str.strip().str.lower().str.replace(" ", "", regex = False) == movie_name.strip().lower().replace(" ", "")
@@ -280,9 +278,9 @@ def recommend(movie_name, top_n=5):
         })
     return results
 
-# ══════════════════════════════════════════════════════════════════════════════
-# SECTION 5 — COLLABORATIVE
-# ══════════════════════════════════════════════════════════════════════════════
+
+#  COLLABORATIVE
+
 
 def recomm_3(user_id):
     if user_id not in user_index:
@@ -304,9 +302,9 @@ def recomm_3(user_id):
     return movie_scores
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# SECTION 6 — EXPLAINABILITY
-# ══════════════════════════════════════════════════════════════════════════════
+
+#  EXPLAINABILITY
+
 
 def explain_content(recommended_ml_id, anchor_ml_id):
     anchor_genres = set(get_movie_genres(anchor_ml_id))
@@ -337,9 +335,9 @@ def explain_hybrid(recommended_ml_id, anchor_ml_id, s_cf, s_con):
         return explain_collaborative()
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# SECTION 7 — HYBRID
-# ══════════════════════════════════════════════════════════════════════════════
+
+#  HYBRID
+
 
 def hybrid_recommendation(user_id, top_n=5, alpha=0.5, beta = 0.4, gamma=0.1):
     """
@@ -350,10 +348,10 @@ def hybrid_recommendation(user_id, top_n=5, alpha=0.5, beta = 0.4, gamma=0.1):
     if user_id not in user_index:
         return []
 
-    # ── Collaborative ──────────────────────────────────────────────────────
+    # Collaborative 
     svd_scores = recomm_3(user_id)
 
-    # ── Content ────────────────────────────────────────────────────────────
+    #  Content 
     user_rated     = ratings[ratings['userId'] == user_id]
     user_favorites = (user_rated[user_rated['rating'] >= 4.0]
                       .sort_values('rating', ascending=False)['movieId'].tolist())
@@ -382,11 +380,11 @@ def hybrid_recommendation(user_id, top_n=5, alpha=0.5, beta = 0.4, gamma=0.1):
                     content_scores.get(target_ml_id, 0) + score * anchor_rating
                 )
 
-    # ── Normalize ──────────────────────────────────────────────────────────
+    #  Normalize 
     norm_svd     = normalize_dict(svd_scores)
     norm_content = normalize_dict(content_scores)
 
-    # ── Sentiment ──────────────────────────────────────────────────────────
+    #  Sentiment 
     all_movies = set(norm_svd.keys()) | set(norm_content.keys())
     candidate_sentiment = {
         ml_id: sentiment_scores.get(int(ml_id), 0.5)
@@ -395,7 +393,7 @@ def hybrid_recommendation(user_id, top_n=5, alpha=0.5, beta = 0.4, gamma=0.1):
     }
     norm_sentiment = normalize_dict(candidate_sentiment)
 
-    # ── Best anchor for explainability ────────────────────────────────────
+    #  Best anchor for explainability 
     best_anchor = next(
         (mid for mid in user_favorites[:3]
          if ml_to_tmdb.get(mid) and
@@ -403,7 +401,7 @@ def hybrid_recommendation(user_id, top_n=5, alpha=0.5, beta = 0.4, gamma=0.1):
         None
     )
 
-    # ── Blend ──────────────────────────────────────────────────────────────
+    #  Blend 
     hybrid_scores = []
     total = alpha + beta + gamma
     if total == 0:
@@ -421,7 +419,7 @@ def hybrid_recommendation(user_id, top_n=5, alpha=0.5, beta = 0.4, gamma=0.1):
 
     hybrid_scores = sorted(hybrid_scores, key=lambda x: x[1], reverse=True)[:top_n]
 
-    # ── Results with reasons ───────────────────────────────────────────────
+    #  Results with reasons
     recommended = []
     for ml_id, score in hybrid_scores:
         title_match = movie[movie['movieId'] == ml_id]['title']
@@ -440,9 +438,9 @@ def hybrid_recommendation(user_id, top_n=5, alpha=0.5, beta = 0.4, gamma=0.1):
     return recommended
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# SECTION 8 — TASTE PROFILE
-# ══════════════════════════════════════════════════════════════════════════════
+
+#  TASTE PROFILE
+
 
 def get_user_taste_profile(user_id):
     if user_id not in user_index:
